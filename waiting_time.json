@@ -1,0 +1,34 @@
+{
+  "Right Front Court": {
+    "Straight Net": 1.0,
+    "Cross Net": 1.2,
+    "Straight Lift": 2.5,
+    "Cross Lift": 2.7
+  },
+  "Left Front Court": {
+    "Straight Net": 1.0,
+    "Cross Net": 1.2,
+    "Straight Lift": 2.5,
+    "Cross Lift": 2.7
+  },
+  "Right Back Court": {
+    "Straight Drop": 2.0,
+    "Cross Drop": 2.2,
+    "Straight Smash": 2.5,
+    "Cross Smash": 2.7,
+    "Straight Half Smash": 2.3,
+    "Cross Half Smash": 2.5,
+    "Straight Clear": 2.5,
+    "Cross Clear": 2.7
+  },
+  "Left Back Court": {
+    "Straight Drop": 2.0,
+    "Cross Drop": 2.2,
+    "Straight Smash": 2.5,
+    "Cross Smash": 2.7,
+    "Straight Half Smash": 2.3,
+    "Cross Half Smash": 2.5,
+    "Straight Clear": 2.5,
+    "Cross Clear": 2.7
+  }
+}
