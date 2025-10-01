@@ -26,14 +26,15 @@ if not cap.isOpened():
     print("Cannot open camera")
     exit()
 
-# State machine: was the hand up?
-hand_was_up = False
-
 # Create window (not fullscreen)
 cv2.namedWindow("Stick Figure Pose + Hit Detection", cv2.WINDOW_NORMAL)
 
 # Current move to perform
 current_move = None
+# State machine: was the hand up?
+hand_was_up = False
+# State machine: waiting for next move after hit
+waiting_for_next = False
 
 while True:
     # Capture frame
@@ -75,39 +76,35 @@ while True:
         if wrist.visibility > 0.5 and shoulder.visibility > 0.5 and hip.visibility > 0.5 \
         and left_foot.visibility > 0.5 and right_foot.visibility > 0.5:
 
-            now = time.time()  # current timestamp
+            now = time.time()
 
-            # Only generate a new move if either no move or wait time has passed
-            if current_move is None:
+            # 1️⃣ Generate a move if none exists AND not in waiting state
+            if current_move is None and not waiting_for_next:
                 current_move = Move.random_move()
-                last_hit_time = now  # start timer immediately
+                hand_was_up = False  # reset hit flag
+                waiting_for_next = False
 
-            elif last_hit_time is not None:
-                # Wait for current_move.wait_time seconds before next move
-                if now - last_hit_time >= current_move.wait_time:
-                    current_move = Move.random_move()
-                    last_hit_time = now
-
-            # Always display current move
-            cv2.putText(frame, str(current_move), (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Always display current move (if any)
+            if current_move is not None:
+                cv2.putText(frame, str(current_move), (10, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             # Hit detection
-            if wrist_y < threshold_y:
-                hand_was_up = True
+            if current_move is not None:
+                if wrist_y < threshold_y:
+                    hand_was_up = True
 
-            if hand_was_up and wrist_y > threshold_y:
-                cv2.putText(frame, "Hit detected!", (100, 150),
-                            cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 5)
-                hand_was_up = False
-                last_hit_time = time.time()  # start waiting period for next move
+                if hand_was_up and wrist_y > threshold_y:
+                    cv2.putText(frame, "Hit detected!", (100, 150),
+                                cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 5)
+                    hand_was_up = False
+                    waiting_for_next = True
+                    wait_start_time = now  # start the post-hit wait timer
 
-        else:
-            cv2.putText(frame, "Ensure full body is visible", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            current_move = None
-            hand_was_up = False
-            last_hit_time = None
+            # 2️⃣ After hit, wait for the move's wait_time before generating the next move
+            if waiting_for_next and (now - wait_start_time >= current_move.wait_time):
+                current_move = None
+                waiting_for_next = False
 
     # Show the frame with stick figure overlay
     cv2.imshow("Stick Figure Pose + Hit Detection", frame)
