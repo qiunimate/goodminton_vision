@@ -1,10 +1,11 @@
 import cv2
 import mediapipe as mp
 import pygame
+import time
+from move import Move
 
 # Initialize the mixer
 pygame.mixer.init()
-# Load the sound
 # TODO: load sounds
 
 # Initialize MediaPipe Pose
@@ -12,12 +13,11 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_drawing = mp.solutions.drawing_utils
 
-handedness = "R"
-# # let user define right or left handed
-# handedness = input("Enter 'R' for right-handed or 'L' for left-handed: ").strip().upper()
-# if handedness not in ['R', 'L']:
-#     print("Invalid input. Please enter 'R' or 'L'.")
-#     exit()
+# let user define right or left handed
+handedness = input("Enter 'R' for right-handed or 'L' for left-handed: ").strip().upper()
+if handedness not in ['R', 'L']:
+    print("Invalid input. Please enter 'R' or 'L'.")
+    exit()
 
 # Open the default camera
 cap = cv2.VideoCapture(0)
@@ -31,6 +31,9 @@ hand_was_up = False
 
 # Create window (not fullscreen)
 cv2.namedWindow("Stick Figure Pose + Hit Detection", cv2.WINDOW_NORMAL)
+
+# Current move to perform
+current_move = None
 
 while True:
     # Capture frame
@@ -69,16 +72,42 @@ while True:
         threshold_y = (shoulder_y + hip_y) / 2  # Midpoint between shoulder and hip, used
 
         # Start the process when the whole body is visible (wrist, shoulder, hip, and feet)
-        if wrist.visibility > 0.5 and shoulder.visibility > 0.5 and hip.visibility > 0.5 and left_foot.visibility > 0.5 and right_foot.visibility > 0.5:
-            # Check if hand is above threshold level
+        if wrist.visibility > 0.5 and shoulder.visibility > 0.5 and hip.visibility > 0.5 \
+        and left_foot.visibility > 0.5 and right_foot.visibility > 0.5:
+
+            now = time.time()  # current timestamp
+
+            # Only generate a new move if either no move or wait time has passed
+            if current_move is None:
+                current_move = Move.random_move()
+                last_hit_time = now  # start timer immediately
+
+            elif last_hit_time is not None:
+                # Wait for current_move.wait_time seconds before next move
+                if now - last_hit_time >= current_move.wait_time:
+                    current_move = Move.random_move()
+                    last_hit_time = now
+
+            # Always display current move
+            cv2.putText(frame, str(current_move), (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            # Hit detection
             if wrist_y < threshold_y:
                 hand_was_up = True
 
-            # If hand was up and now goes below threshold level
             if hand_was_up and wrist_y > threshold_y:
                 cv2.putText(frame, "Hit detected!", (100, 150),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 5)
-                hand_was_up = False  # reset state
+                hand_was_up = False
+                last_hit_time = time.time()  # start waiting period for next move
+
+        else:
+            cv2.putText(frame, "Ensure full body is visible", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            current_move = None
+            hand_was_up = False
+            last_hit_time = None
 
     # Show the frame with stick figure overlay
     cv2.imshow("Stick Figure Pose + Hit Detection", frame)
