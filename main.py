@@ -1,12 +1,13 @@
 import cv2
 import mediapipe as mp
-import pygame
 import time
 from move import Move
+from sound import init_tts, say
 from motion_detector import draw_pose, get_landmarks, is_body_visible
 
 # ====== INITIALIZATION ======
-pygame.mixer.init()  # sound system
+sound_engine = init_tts()
+sound_engine.startLoop(False)
 # TODO: load hit sounds
 
 mp_pose = mp.solutions.pose
@@ -26,10 +27,11 @@ if not cap.isOpened():
 cv2.namedWindow("Stick Figure Pose + Hit Detection", cv2.WINDOW_NORMAL)
 
 # ====== STATE VARIABLES ======
-current_move = None
 hand_was_up = False
 waiting_for_next = False
+current_move = None
 wait_start_time = None
+instruction_given = False
 
 # ====== MAIN LOOP ======
 while True:
@@ -49,8 +51,8 @@ while True:
         shoulder_y = shoulder.y * h
         hip_y = hip.y * h
         threshold_y = (shoulder_y + hip_y) / 2
-
-        if is_body_visible(wrist, shoulder, hip, left_foot, right_foot):
+        my_bool = is_body_visible(wrist, shoulder, hip, left_foot, right_foot)
+        if my_bool:
             now = time.time()
 
             # Generate new move if needed
@@ -58,14 +60,19 @@ while True:
                 current_move = Move.random_move()
                 hand_was_up = False
                 waiting_for_next = False
+                instruction_given = False
 
-            # Display current move
             if current_move is not None:
+                # Display current move
                 cv2.putText(frame, str(current_move), (10, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                if not instruction_given:
+                    # Play instruction sound
+                    say(sound_engine, f"{current_move.zone} {current_move.side} {current_move.direction} {current_move.move_type}")
+                    print(f"Instruction: {current_move.zone} {current_move.side} {current_move.direction} {current_move.move_type}")
+                    instruction_given = True
 
-            # Hit detection
-            if current_move is not None:
+                # Hit detection
                 if wrist_y < threshold_y:
                     hand_was_up = True
 
@@ -76,11 +83,14 @@ while True:
                     waiting_for_next = True
                     wait_start_time = now
 
-            # Wait before next move
-            if waiting_for_next and (now - wait_start_time >= current_move.wait_time):
-                current_move = None
-                waiting_for_next = False
+                # Wait before next move
+                if waiting_for_next and (now - wait_start_time >= current_move.wait_time):
+                    current_move = None
+                    waiting_for_next = False
+                    wait_start_time = None
+                    instruction_given = False
 
+        # Body not fully visible
         else:
             cv2.putText(frame, "Ensure full body is visible", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
@@ -93,5 +103,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# ====== CLEANUP ======
 cap.release()
 cv2.destroyAllWindows()
+sound_engine.endLoop()

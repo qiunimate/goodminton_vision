@@ -1,4 +1,3 @@
-# ====== MOVE DEFINITION ======
 import random
 
 # Example waiting times (can be loaded from JSON if you want)
@@ -25,7 +24,10 @@ class Move:
         self.wait_time = waiting_times[self.move_type][self.direction]
 
     def __str__(self):
-        return f"{self.side} | {self.zone} | {self.direction} {self.move_type}"
+        return f"{self.side} | {self.zone} | {self.direction} | {self.move_type}"
+    
+    def give_instruction(self):
+        return f"{self.side} {self.zone} {self.direction} {self.move_type}"
 
     # ====== RANDOM MOVE GENERATION ======
     @classmethod
