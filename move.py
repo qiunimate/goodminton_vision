@@ -3,10 +3,10 @@ import random
 # Example waiting times (can be loaded from JSON if you want)
 waiting_times = {
     "net": {"straight": 1.0, "cross": 1.2},
-    "lift": {"straight": 2.5, "cross": 2.7},
-    "drop": {"straight": 2.0, "cross": 2.2},
-    "smash": {"straight": 2.5, "cross": 2.7},
-    "clear": {"straight": 2.5, "cross": 2.7}
+    "lift": {"straight": 2.1, "cross": 2.3},
+    "drop": {"straight": 1.7, "cross": 1.9},
+    "smash": {"straight": 0.8, "cross": 1.0},
+    "clear": {"straight": 2.4, "cross": 2.6}
 }
 
 class Move:
