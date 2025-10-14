@@ -4,6 +4,11 @@
 
 Goodminton Dance is an interactive video-based training app that turns badminton footwork practice into a dynamic, engaging experience. Using real-time camera tracking and random movement instructions, it helps you improve your agility, coordination, and court awareness, **all while keeping your body in motion like a dance**.
 
+## Prerequisites
+- Python 3.11 or higher
+- A webcam or external camera
+- (Optional) conda environment for dependency management
+
 ## Installation
 1. Clone the repository:
    ```bash
@@ -17,7 +22,7 @@ Goodminton Dance is an interactive video-based training app that turns badminton
    ```bash
    pip install -r requirements.txt
    ```
-
+   
 ## Usage
 1. Run the main application:
    ```bash
