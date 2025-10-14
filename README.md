@@ -17,3 +17,14 @@ Goodminton Dance is an interactive video-based training app that turns badminton
    ```bash
    pip install -r requirements.txt
    ```
+
+## Usage
+1. Run the main application:
+   ```bash
+   python main.py
+   ```
+2. Select your handedness (type ***l*** or ***r*** in the console).
+3. Follow the on-screen instructions to start your training session.
+
+
+### Enjoy your training and dance your way to better badminton skills!🏸
